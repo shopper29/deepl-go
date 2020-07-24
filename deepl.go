@@ -81,8 +81,6 @@ func (c *Client) TranslateSentence(ctx context.Context, text string, sourceLang 
 	}
 
 	apiKey := os.Getenv("DEEPL_API_KEY")
-	fmt.Println("Your API Key: ", apiKey)
-
 	q.Add("auth_key", apiKey)
 	q.Add("text", text)
 	q.Add("target_lang", targetLang)
