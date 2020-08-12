@@ -1,0 +1,7 @@
+HTTP/2 200 
+server: nginx
+date: Wed, 12 Aug 2020 20:33:05 GMT
+content-type: application/json
+content-length: 51
+access-control-allow-origin: *
+

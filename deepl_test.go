@@ -72,7 +72,7 @@ func initTestServer(t *testing.T, mockResponseHeaderFile, mockResponseBodyFile s
 	return cli, teardown
 }
 
-func TestClient_TranslateText(t *testing.T) {
+func TestClient_TranslateSentence(t *testing.T) {
 	tt := []struct {
 		name string
 
@@ -173,6 +173,54 @@ func TestClient_TranslateText(t *testing.T) {
 				}
 				if !strings.Contains(err.Error(), tc.expectedErrMessage) {
 					t.Fatalf("reponse error message wrong. '%s' is expected to contain '%s'", err.Error(), tc.expectedErrMessage)
+				}
+			}
+		})
+	}
+}
+
+func TestClient_GetAccountStatus(t *testing.T) {
+	tt := []struct {
+		name string
+
+		mockResponseHeaderFile string
+		mockResponseBodyFile   string
+
+		expectedMethod      string
+		expectedRequestPath string
+		expectedRawQuery    string
+		expectedResponse    *AccountStatus
+		expectedErrMessage  string
+	}{
+		{
+			name: "success",
+
+			mockResponseHeaderFile: "testdata/GetAccountStatus/success-header",
+			mockResponseBodyFile:   "testdata/GetAccountStatus/success-body",
+
+			expectedMethod:      http.MethodPost,
+			expectedRequestPath: "/v2/usage",
+			expectedRawQuery:    fmt.Sprintf("auth_key=%s", os.Getenv("DEEPL_API_KEY")),
+			expectedResponse:    &AccountStatus{CharacterCount: 30315, CharacterLimit: 1000000},
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T){
+			cli, teardown := initTestServer(t, tc.mockResponseHeaderFile, tc.mockResponseBodyFile, tc.expectedMethod, tc.expectedRequestPath, tc.expectedRawQuery)
+			defer teardown()
+
+			correctResponse, err := cli.GetAccountStatus(context.Background())
+			if tc.expectedErrMessage  == "" {
+				if err != nil {
+					t.Fatalf("response error should be nil. got=%s", err.Error())
+				}
+				if correctResponse.CharacterCount != tc.expectedResponse.CharacterCount || correctResponse.CharacterLimit != tc.expectedResponse.CharacterLimit {
+					t.Fatalf("response items wrong. want=%+v, got=%+v", tc.expectedResponse, correctResponse)
+				}
+			} else {
+				if err == nil {
+					t.Fatalf("response error should not be non-nil. got=nil")
 				}
 			}
 		})
