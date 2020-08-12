@@ -126,6 +126,50 @@ func responseParse(resp *http.Response, outStruct interface{}) error {
 	}
 }
 
+func (c *Client) GetAccountStatus(ctx context.Context) (*AccountStatus, error) {
+	var accountStatusResp AccountStatus
+
+	reqURL := *c.BaseURL
+
+	// Set path
+	reqURL.Path = path.Join(reqURL.Path, "v2", "usage")
+
+	q := reqURL.Query()
+
+	apiKey, err := getAPIKey()
+	if err != nil {
+		return nil, err
+	}
+
+	q.Add("auth_key", apiKey)
+	reqURL.RawQuery = q.Encode()
+
+	// make new request
+	req, err := http.NewRequest(http.MethodPost, reqURL.String(), nil)
+	if err != nil {
+		err := xerrors.Errorf("Failed to create request: %w", err)
+		return nil, err
+	}
+
+	// set header
+	req.Header.Set("User-Agent", "Deepl-Go-Client")
+
+	// set context
+	req = req.WithContext(ctx)
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		err := xerrors.Errorf("Failed to send http request: %w", err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if err := responseParse(resp, &accountStatusResp); err != nil {
+		return nil, err
+	}
+	return &accountStatusResp, nil
+}
+
 func (c *Client) TranslateSentence(ctx context.Context, text string, sourceLang string, targetLang string) (*TranslateResponse, error) {
 	var transResp TranslateResponse
 
